@@ -1,22 +1,25 @@
-'use client'
+"use client";
 
 import React, { useEffect, useState } from "react";
 import { storage } from "../Firebase";
 import { ref, uploadBytes, listAll, getDownloadURL } from "firebase/storage";
 import { v4 } from "uuid";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faThumbsUp } from "@fortawesome/free-solid-svg-icons";
 
 const FeedPage = () => {
   const [imageUpload, setImageUpload] = useState(null);
   const [imageList, setImageList] = useState([]);
+  const [textUpload, setTextUpload] = useState("");
 
-  const imageListRef = ref(storage, 'images/')
+  const imageListRef = ref(storage, "images/");
   const uploadImage = () => {
     if (imageUpload == null) return;
     const imageRef = ref(storage, `images/${imageUpload.name + v4()}`);
     uploadBytes(imageRef, imageUpload).then((snapshot) => {
       getDownloadURL(snapshot.ref).then((url) => {
-        setImageList((prev) => [...prev, url])
-      })
+        setImageList((prev) => [...prev, url]);
+      });
       alert("Image Uploaded");
     });
   };
@@ -27,25 +30,31 @@ const FeedPage = () => {
   };
 
   useEffect(() => {
-    listAll(imageListRef).then((response) => {
-      response.items.forEach((item) => {
-        getDownloadURL(item).then((url) => {
-            setImageList((prev) => [...prev, url]);
+    const urls = [];
+    const unsubscribe = listAll(imageListRef).then((response) => {
+      const promises = response.items.map((item) => {
+        return getDownloadURL(item).then((url) => {
+          urls.push(url);
         });
       });
+      Promise.all(promises).then(() => {
+        setImageList(urls);
+      });
     });
-  }, []);
 
+    return () => {
+      unsubscribe();
+    };
+  }, []);
 
   return (
     <div className="h-screen bg-orange-200">
-        <h1 className="text-2xl text-center pt-3 pb-3">Welcome to Zimo Social Media</h1>
+      <h1 className="text-2xl text-center pt-3 pb-3">
+        Welcome to Zimo Social Media
+      </h1>
       <div className="flex items-center justify-center h-52 bg-lime-200 border-2 border-slate-500">
         <form className="flex flex-col w-72 h-72 pt-16" onSubmit={handleSubmit}>
           <label htmlFor="text">Share your Thoughts:</label>
-          {/* <input type="text" id="text" name="text" placeholder="Share your thoughts" required /> */}
-          <br />
-          <label htmlFor="image">Upload your memory:</label>
           <input
             type="file"
             id="image"
@@ -65,9 +74,29 @@ const FeedPage = () => {
         </form>
       </div>
       <div className="flex flex-col justify-center items-center">
-        {imageList.map((url) => {
-            return <img src={url} className="h-72 pt-5" alt="Uploaded Image" />
-        })}
+        <div className="flex flex-col justify-center items-center bg-red-400 w-[32rem] h-auto">
+          {imageList.length === 0 ? (
+            <p className="text-lg text-gray-600">
+              Please upload your first post
+            </p>
+          ) : (
+            <>
+              {imageList.map((url) => {
+                console.log(url, "umair");
+                return (
+                  <div>
+                    <img src={url} className="h-72 w-92 pt-5" alt="Uploaded Image" />
+                    <FontAwesomeIcon
+                      icon={faThumbsUp}
+                      bounce
+                      className="cursor-pointer"
+                    />
+                  </div>
+                );
+              })}
+            </>
+          )}
+        </div>
       </div>
     </div>
   );
