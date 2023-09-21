@@ -10,7 +10,8 @@ import { faThumbsUp } from "@fortawesome/free-solid-svg-icons";
 const FeedPage = () => {
   const [imageUpload, setImageUpload] = useState(null);
   const [imageList, setImageList] = useState([]);
-  const [textUpload, setTextUpload] = useState("");
+  const [likeCounts, setLikeCounts] = useState({});
+
 
   const imageListRef = ref(storage, "images/");
   const uploadImage = () => {
@@ -47,12 +48,20 @@ const FeedPage = () => {
     };
   }, []);
 
+  const handleLike = (imageUrl) => {
+    setLikeCounts((prevCounts) => ({
+      ...prevCounts,
+      [imageUrl]: (prevCounts[imageUrl] || 0) + 1,
+    }));
+  };
+  
+
   return (
-    <div className="h-screen bg-orange-200">
+    <div className="bg-orange-200">
       <h1 className="text-2xl text-center pt-3 pb-3">
         Welcome to Zimo Social Media
       </h1>
-      <div className="flex items-center justify-center h-52 bg-lime-200 border-2 border-slate-500">
+      <div className="flex items-center justify-center bg-lime-200 border-2 border-slate-500">
         <form className="flex flex-col w-72 h-72 pt-16" onSubmit={handleSubmit}>
           <label htmlFor="text">Share your Thoughts:</label>
           <input
@@ -74,7 +83,7 @@ const FeedPage = () => {
         </form>
       </div>
       <div className="flex flex-col justify-center items-center">
-        <div className="flex flex-col justify-center items-center bg-red-400 w-[32rem] h-auto">
+        <div className="flex flex-col justify-center items-center w-[32rem] h-auto">
           {imageList.length === 0 ? (
             <p className="text-lg text-gray-600">
               Please upload your first post
@@ -82,18 +91,20 @@ const FeedPage = () => {
           ) : (
             <>
               {imageList.map((url) => {
-                console.log(url, "umair");
-                return (
-                  <div>
-                    <img src={url} className="h-72 w-92 pt-5" alt="Uploaded Image" />
-                    <FontAwesomeIcon
-                      icon={faThumbsUp}
-                      bounce
-                      className="cursor-pointer"
-                    />
-                  </div>
-                );
-              })}
+  return (
+    <div key={url} className="pt-5 w-[32rem]">
+      <img src={url} className="pt-5" alt="Uploaded Image" />
+      <FontAwesomeIcon
+        icon={faThumbsUp}
+        bounce
+        className="cursor-pointer text-2xl"
+        onClick={() => handleLike(url)}
+      />
+      <span className="pl-3">{likeCounts[url] || 0}</span> Likes
+    </div>
+  );
+})}
+
             </>
           )}
         </div>
